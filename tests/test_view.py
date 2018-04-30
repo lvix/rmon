@@ -34,71 +34,68 @@ class TestServerList:
         assert 'updated_at' in h
         assert 'created_at' in h
 
+    def test_create_server_success(self, db, client):
+        """ 测试创建 Redis 服务器成功
+        """
+        data = {
+            'name': 'redis test',
+            'description': 'this is a test record',
+            'host': '127.0.0.1',
+            'port': '6379',
+        }
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+        }
+        resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
 
-def test_create_server_success(self, db, client):
-    """ 测试创建 Redis 服务器成功
-    """
-    data = {
-        'name': 'redis test',
-        'description': 'this is a test record',
-        'host': '127.0.0.1',
-        'port': '6379',
-    }
-    headers = {
-        'Content-Type': 'application/json; charset=utf-8',
-    }
-    resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
+        # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        # 创建成功后返回状态码 201 OK
+        assert resp.status_code == 201
+        # 创建成功 ok == True
+        assert resp.json['ok'] is True
 
-    # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
-    assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
-    # 创建成功后返回状态码 201 OK
-    assert resp.status_code == 201
-    # 创建成功 ok == True
-    assert resp.json['ok'] is True
+    def test_create_server_failed_with_invalid_host(self, db, client):
+        """ 无效的服务器地址导致创建 Redis 服务器失败
+        """
+        data = {
+            'name': 'redis test',
+            'description': 'this is a test record',
+            'host': '127.0.0',  # 无效的地址
+            'port': '6379',
+        }
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+        }
+        resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
 
+        # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        # 创建失败 400
+        assert resp.status_code == 400
+        # 创建失败
+        assert resp.json['error'] is not None
 
-def test_create_server_failed_with_invalid_host(self, db, client):
-    """ 无效的服务器地址导致创建 Redis 服务器失败
-    """
-    data = {
-        'name': 'redis test',
-        'description': 'this is a test record',
-        'host': '127.0.0',  # 无效的地址
-        'port': '6379',
-    }
-    headers = {
-        'Content-Type': 'application/json; charset=utf-8',
-    }
-    resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
+    def test_create_server_failed_with_duplicate_server(self, server, client):
+        """ 创建重复的服务器时将失败
+        """
+        data = {
+            'name': 'redis test',
+            'description': 'this is a test record',
+            'host': '127.0.0.1',
+            'port': '6379',
+        }
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+        }
+        resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
 
-    # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
-    assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
-    # 创建失败 400
-    assert resp.status_code == 400
-    # 创建失败
-    assert resp.json['error'] is not None
-
-
-def test_create_server_failed_with_duplicate_server(self, server, client):
-    """ 创建重复的服务器时将失败
-    """
-    data = {
-        'name': 'redis test',
-        'description': 'this is a test record',
-        'host': '127.0.0.1',
-        'port': '6379',
-    }
-    headers = {
-        'Content-Type': 'application/json; charset=utf-8',
-    }
-    resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
-
-    # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
-    assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
-    # 创建失败 400
-    assert resp.status_code >= 400
-    # 创建失败
-    assert resp.json['error'] is not None
+        # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        # 创建失败 400
+        assert resp.status_code >= 400
+        # 创建失败
+        assert resp.json['error'] is not None
 
 
 class TestServerDetail:
