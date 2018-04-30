@@ -100,17 +100,17 @@ class RestView(MethodView):
 
             return response
 
-        @staticmethod
-        def unpack(value):
-            """ 解析视图方法返回值
-            """
-            headers = {}
-            if not isinstance(value, tuple):
-                return value, 200, {}
+    @staticmethod
+    def unpack(value):
+        """ 解析视图方法返回值
+        """
+        headers = {}
+        if not isinstance(value, tuple):
+            return value, 200, {}
 
-            # 如果返回值有 3
-            if len(value) == 3:
-                data, code, headers = value
-            elif len(value) == 2:
-                data, code = value
-            return data, code, headers
+        # 如果返回值有 3
+        if len(value) == 3:
+            data, code, headers = value
+        elif len(value) == 2:
+            data, code = value
+        return data, code, headers
