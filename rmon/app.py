@@ -1,12 +1,14 @@
 """ rmon.app
 """
 
-import os 
-from flask import Flask 
+import os
 
-from rmon.views import api 
-from rmon.models import db 
-from rmon.config import  DevConfig, ProductConfig 
+from flask import Flask
+
+from rmon.config import DevConfig, ProductConfig
+from rmon.models import db
+from rmon.views import api
+
 
 def create_app():
     """create and initialize app 
@@ -21,7 +23,7 @@ def create_app():
     else:
         app.config.from_object(DevConfig)
 
-    app.config.from_envvar('RMON_SETTTINGS', silent=True)
+    app.config.from_envvar('RMON_SETTINGS', silent=True)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
 
     app.register_blueprint(api)

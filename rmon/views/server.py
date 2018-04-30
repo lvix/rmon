@@ -1,7 +1,7 @@
 from flask import request, g
 
-from rmon.common.rest import RestView
 from rmon.common.decorators import ObjectMustExist
+from rmon.common.rest import RestView
 from rmon.models import Server, ServerSchema
 
 
@@ -13,6 +13,7 @@ class ServerList(RestView):
         """获取 Redis 列表
         """
         servers = Server.query.all()
+        print(servers)
         return ServerSchema().dump(servers, many=True).data
 
     def post(self):
@@ -31,7 +32,7 @@ class ServerDetail(RestView):
     """ 服务器信息
     """
 
-    method_deocrators = (ObjectMustExist(Server),)
+    method_decorators = (ObjectMustExist(Server),)
 
     def get(self, object_id):
         """ 获取服务器详情
@@ -45,7 +46,6 @@ class ServerDetail(RestView):
 
         schema = ServerSchema(context={'instance': g.instance})
         data = request.get_json()
-
         server, errors = schema.load(data, partial=True)
 
         if errors:
@@ -59,3 +59,17 @@ class ServerDetail(RestView):
         """
         g.instance.delete()
         return {'ok': True}
+
+
+class ServerMetrics(RestView):
+
+    def get(self, object_id):
+        """
+        获取服务器数据
+        :param object_id: SQLAlchemy 对象的查询 id
+        :return:
+            查询成功 200：返回一个字典对象，包含了信息
+            服务器不存在 404：
+            服务器无法连接 500：
+        """
+        pass

@@ -1,5 +1,6 @@
 import os
 
+
 class DevConfig:
     """
     Development Config 
@@ -7,7 +8,8 @@ class DevConfig:
     DEBUG = True 
     SQLALCHEMY_TRACK_MODIFICATIONS = False 
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
-    TEMPLATES_AUTO_RELOAD = True 
+    TEMPLATES_AUTO_RELOAD = True
+
 
 class ProductConfig(DevConfig):
     """
@@ -18,4 +20,3 @@ class ProductConfig(DevConfig):
     # path for sqlite db 
     path = os.path.join(os.getcwd(), 'rmon.db').replace('\\', '/')
     SQLALCHEMY_DATABASE_URI = 'sqlite:///{}'.format(path)
-    

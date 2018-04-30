@@ -1,6 +1,7 @@
 """ rmon.rmon.rest
 """
 from collections import Mapping
+
 from flask import request, Response, make_response
 from flask.json import dumps
 from flask.views import MethodView
@@ -47,7 +48,6 @@ class RestView(MethodView):
     def dispatch_request(self, *args, **kwargs):
         """重写父类方法，支持数据自动序列化
         """
-
         # 如果直接使用 self.method , 如果方法不存在会报错，而 getattr 可以避免这个问题
         method = getattr(self, request.method.lower(), None)
         if method is None and request.method == 'HEAD':
@@ -88,17 +88,17 @@ class RestView(MethodView):
 
             data = {'ok': False, 'message': message}
 
-            # 序列化数据
-            result = dumps(data) + '\n'
+        # 序列化数据
+        result = dumps(data) + '\n'
 
-            # 生成 HTTP 响应
-            response = make_response(result, code)
-            response.headers.extend(headers)
+        # 生成 HTTP 响应
+        response = make_response(result, code)
+        response.headers.extend(headers)
 
-            # 设置响应头为 application/json
-            response.headers['Content-Type'] = self.content_type
+        # 设置响应头为 application/json
+        response.headers['Content-Type'] = self.content_type
 
-            return response
+        return response
 
     @staticmethod
     def unpack(value):

@@ -2,11 +2,13 @@
 rmon.model
 """
 
-from flask_sqlalchemy import SQLAlchemy 
-from datetime import datetime 
-from redis import StrictRedis, RedisError
-from rmon.common.rest import RestException 
+from datetime import datetime
+
+from flask_sqlalchemy import SQLAlchemy
 from marshmallow import (Schema, fields, validate, post_load, validates_schema, ValidationError)
+from redis import StrictRedis, RedisError
+
+from rmon.common.rest import RestException
 
 db = SQLAlchemy()
 
@@ -24,7 +26,7 @@ class Server(db.Model):
     host = db.Column(db.String(15))
     port = db.Column(db.Integer, default=6379)
     password = db.Column(db.String())
-    update_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow())
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow())
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
@@ -68,7 +70,7 @@ class ServerSchema(Schema):
     host = fields.String(required=True, validate=validate.Regexp(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'))
     port = fields.Integer(validate=validate.Range(1024, 65536))
     password = fields.String()
-    update_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
 
     @validates_schema 

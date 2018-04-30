@@ -1,7 +1,6 @@
 import json
-from flask import url_for 
 
-from rmon.models import Server
+from flask import url_for
 
 
 class TestServerList:
@@ -14,6 +13,7 @@ class TestServerList:
         """
         resp = client.get(url_for(self.endpoint))
 
+        assert resp is not None
         # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
         assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
 
@@ -68,13 +68,15 @@ class TestServerList:
             'Content-Type': 'application/json; charset=utf-8',
         }
         resp = client.post(url_for(self.endpoint), data=json.dumps(data), headers=headers)
-
+        print(resp.json)
         # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
         assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
         # 创建失败 400
         assert resp.status_code == 400
         # 创建失败
-        assert resp.json['error'] is not None
+        assert resp.json['ok'] is False
+
+        assert resp.json['message'] == 'String does not match expected pattern.'
 
     def test_create_server_failed_with_duplicate_server(self, server, client):
         """ 创建重复的服务器时将失败
@@ -93,9 +95,11 @@ class TestServerList:
         # RestView 视图基类会设置 HTTP 头部 Content-Type 为 json
         assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
         # 创建失败 400
-        assert resp.status_code >= 400
+        assert resp.status_code == 400
         # 创建失败
-        assert resp.json['error'] is not None
+        assert resp.json['ok'] is False
+
+        assert resp.json['message'] == 'Redis server already exists'
 
 
 class TestServerDetail:
@@ -107,29 +111,122 @@ class TestServerDetail:
     def test_get_server_success(self, server, client):
         """测试获取 Redis 服务器详情
         """
-        pass
+        resp = client.get(url_for(self.endpoint, object_id=1))
 
-    def test_get_server_failed(self, db, client):
+        assert resp.status_code == 200
+
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+
+        h = resp.json
+
+        assert h['name'] == 'redis test'
+        assert h['description'] == 'this is a test record'
+        assert h['host'] == '127.0.0.1'
+        assert h['port'] == 6379
+        assert h['created_at']
+        assert h['updated_at']
+
+    def test_get_server_failed(self, db, server, client):
         """获取不存在的 Redis 服务器详情失败
         """
-        pass
+        resp = client.get(url_for(self.endpoint, object_id=0))
+
+        assert resp.status_code == 404
+        assert resp.json['message'] == 'object doesn\'t exist'
+        assert resp.json['ok'] is False
 
     def test_update_server_success(self, server, client):
         """更新 Redis 服务器成功
         """
-        pass
+        data = {
+            'name': 'renamed redis',
+            'description': 'this is a renamed redis server',
+            'host': '127.0.0.123',
+            'port': '6888',
+        }
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+        }
+        resp = client.put(url_for(self.endpoint, object_id=1), data=json.dumps(data), headers=headers)
+
+        assert resp.status_code == 200
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        assert resp.json['ok'] is True
+
+        resp = client.get(url_for(self.endpoint, object_id=1))
+
+        assert resp.status_code == 200
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        h = resp.json
+        assert h['name'] == 'renamed redis'
+        assert h['description'] == 'this is a renamed redis server'
+        assert h['host'] == '127.0.0.123'
+        assert h['port'] == 6888
+        assert h['created_at']
+        assert h['updated_at']
+        assert h['created_at'] != h['updated_at']
 
     def test_update_server_success_with_duplicate_server(self, server, client):
         """更新服务器名称为其他同名服务器名称时失败
         """
-        pass
+        data = {
+            'name': 'redis test 1',
+            'description': 'this is a test record',
+            'host': '127.0.0.1',
+            'port': '6379',
+        }
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+        }
+        # 创建服务器
+        resp = client.post(url_for('api.server_list'), data=json.dumps(data), headers=headers)
+        # 验证
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        assert resp.status_code == 201
+        assert resp.json['ok'] is True
+        # 尝试修改服务器
+        data = {
+            'name': 'redis test',
+            # 'description': 'this is a test record',
+            # 'host': '127.0.0.1',
+            # 'port': '6379',
+        }
+        resp = client.put(url_for(self.endpoint, object_id=2), data=json.dumps(data), headers=headers)
+        # 修改失败
+
+        assert resp.status_code == 400
+        assert resp.json['ok'] is False
+        assert resp.json['message'] == 'Redis server already exists'
 
     def test_delete_success(self, server, client):
         """删除 Redis 服务器成功
         """
-        pass
+        # 获取 object_id == 1 的服务器
+        resp = client.get(url_for(self.endpoint, object_id=1))
+        assert resp.status_code == 200
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        assert resp.json['name'] == 'redis test'
+
+        # 尝试删除服务器
+        resp = client.delete(url_for(self.endpoint, object_id=1))
+        assert resp.status_code == 200
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        assert resp.json['ok'] is True
 
     def test_delete_failed_with_host_not_exist(self, db, client):
         """删除不存在的 Redis 服务器失败
         """
-        pass
+        # 验证 object_id == 0 的服务器不存在
+        resp = client.get(url_for(self.endpoint, object_id=0))
+
+        assert resp.status_code == 404
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        assert resp.json['ok'] is False
+        assert resp.json['message'] == 'object doesn\'t exist'
+
+        # 尝试删除之
+        resp = client.delete(url_for(self.endpoint, object_id=0))
+        assert resp.status_code == 404
+        assert resp.headers['Content-Type'] == 'application/json; charset=utf-8'
+        assert resp.json['ok'] is False
+        assert resp.json['message'] == 'object doesn\'t exist'
