@@ -1,9 +1,9 @@
 """ rmon.rmon.rest
 """
-from collections import Mapping 
-from flask import request, Response, make_response 
+from collections import Mapping
+from flask import request, Response, make_response
 from flask.json import dumps
-from flask.vews import MethodView
+from flask.views import MethodView
 
 
 class RestException(Exception):
@@ -18,11 +18,10 @@ class RestException(Exception):
             code (int): http status code 
             message (str): error info 
         """
-        
-        self.code = code 
-        self.message = message 
-        super(RestException, self).__init__()
 
+        self.code = code
+        self.message = message
+        super(RestException, self).__init__()
 
 
 class RestView(MethodView):
@@ -43,7 +42,7 @@ class RestView(MethodView):
         result = dumps(data) + '\n'
         resp = make_response(result, exception.code)
         resp.headers['Content-Type'] = self.content_type
-        return resp 
+        return resp
 
     def dispatch_request(self, *args, **kwargs):
         """重写父类方法，支持数据自动序列化
@@ -51,7 +50,7 @@ class RestView(MethodView):
 
         # 如果直接使用 self.method , 如果方法不存在会报错，而 getattr 可以避免这个问题
         method = getattr(self, request.method.lower(), None)
-        if mehtod is None and request.method == 'HEAD':
+        if method is None and request.method == 'HEAD':
             method = getattr(self, 'get', None)
 
         assert method is not None, 'Uninplemented method {}'.format(request.method)
@@ -71,7 +70,7 @@ class RestView(MethodView):
 
         # 如果返回结果已经是 HTTP 响应则直接返回
         if isinstance(resp, Response):
-            return resp 
+            return resp
 
         # 从返回值中解析出 HTTP 响应信息，比如状态码和头部
         data, code, headers = RestView.unpack(resp)
@@ -101,19 +100,17 @@ class RestView(MethodView):
 
             return response
 
-
-        @staticmethod 
+        @staticmethod
         def unpack(value):
             """ 解析视图方法返回值
             """
-             headers = {}
-             if not isinstance(value, tuple):
+            headers = {}
+            if not isinstance(value, tuple):
                 return value, 200, {}
 
             # 如果返回值有 3
             if len(value) == 3:
-                data, code, headers = value 
+                data, code, headers = value
             elif len(value) == 2:
                 data, code = value
-            return data, code, headers 
-            
+            return data, code, headers

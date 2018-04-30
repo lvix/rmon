@@ -1,8 +1,9 @@
 from flask import request, g
 
-from rmon.common.rest import RestView 
-from rmon.common.method_deocrators import OjectMustExits
-from rmon.models import Server, ServerSchema 
+from rmon.common.rest import RestView
+from rmon.common.decorators import ObjectMustExist
+from rmon.models import Server, ServerSchema
+
 
 class ServerList(RestView):
     """ Redis server list
@@ -30,13 +31,13 @@ class ServerDetail(RestView):
     """ 服务器信息
     """
 
-    method_deocrators = (OjectMustExits(Server), )
+    method_deocrators = (ObjectMustExist(Server),)
 
     def get(self, object_id):
         """ 获取服务器详情
         """
         data, _ = ServerSchema().dump(g.instance)
-        return data 
+        return data
 
     def put(self, object_id):
         """ 更新服务器
@@ -55,7 +56,6 @@ class ServerDetail(RestView):
 
     def delete(self, object_id):
         """更新服务器
-        """ 
+        """
         g.instance.delete()
         return {'ok': True}
-

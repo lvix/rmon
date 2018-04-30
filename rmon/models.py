@@ -34,22 +34,19 @@ class Server(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def  delete(self):
+    def delete(self):
         db.session.delete(self)
         db.session.commit()
-
 
     @property 
     def redis(self):
         return StrictRedis(host=self.host, port=self.port, password=self.password)
-
 
     def ping(self):
         try:
             return self.redis.ping()
         except RedisError:
             raise RestException(400, 'cannot connect to redis server {}'.format(self.host))
-
 
     def get_metrics(self):
         """get redis server metrics 
@@ -69,7 +66,7 @@ class ServerSchema(Schema):
     description = fields.String(validate=validate.Length(0, 512))
 
     host = fields.String(required=True, validate=validate.Regexp(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'))
-    port= fields.Integer(validate=validate.Range(1024, 65536))
+    port = fields.Integer(validate=validate.Range(1024, 65536))
     password = fields.String()
     update_at = fields.DateTime(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
@@ -81,7 +78,7 @@ class ServerSchema(Schema):
         if 'port' not in data:
             data['port'] = 6379 
 
-        instance = self.context.get('instance', None )
+        instance = self.context.get('instance', None)
         server = Server.query.filter_by(name=data['name']).first()
 
         if server is None:
